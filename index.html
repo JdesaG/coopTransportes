@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Coop Transportes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">CT</span>
+          <div>
+            <p>Coop Transportes</p>
+            <h1>Compra de tickets</h1>
+          </div>
+        </div>
+        <span class="secure-pill">WebView</span>
+      </header>
+
+      <section class="route-panel" aria-label="Datos del viaje">
+        <label>
+          <span>Origen</span>
+          <select id="origin">
+            <option value="Quito">Quito</option>
+            <option value="Guayaquil">Guayaquil</option>
+            <option value="Cuenca">Cuenca</option>
+            <option value="Manta">Manta</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Destino</span>
+          <select id="destination">
+            <option value="Guayaquil">Guayaquil</option>
+            <option value="Quito">Quito</option>
+            <option value="Cuenca">Cuenca</option>
+            <option value="Manta">Manta</option>
+          </select>
+        </label>
+
+        <div class="inline-fields">
+          <label>
+            <span>Fecha</span>
+            <input id="travel-date" type="date" />
+          </label>
+          <label>
+            <span>Pasajeros</span>
+            <select id="passengers">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="seat-heading">
+        <div>
+          <p>Selecciona tus asientos</p>
+          <h2>Toque sobre el asiento</h2>
+        </div>
+        <div class="legend" aria-label="Leyenda de asientos">
+          <span><i class="sample available"></i>Libre</span>
+          <span><i class="sample selected"></i>Elegido</span>
+          <span><i class="sample taken"></i>Ocupado</span>
+        </div>
+      </section>
+
+      <section class="bus-wrap" aria-label="Mapa de asientos del bus">
+        <div class="bus">
+          <div class="driver-row">
+            <span class="door"></span>
+            <span class="driver-seat" aria-label="Conductor"></span>
+          </div>
+          <div id="seat-map" class="seat-map"></div>
+        </div>
+      </section>
+
+      <section class="summary-bar" aria-label="Resumen de compra">
+        <div>
+          <span>Asientos</span>
+          <strong id="selected-seats">Ninguno</strong>
+        </div>
+        <div>
+          <span>Total</span>
+          <strong id="total-price">$0.00</strong>
+        </div>
+      </section>
+
+      <footer class="actions">
+        <button id="clear-button" class="secondary" type="button">Limpiar</button>
+        <button id="buy-button" class="primary" type="button" disabled>Comprar ticket</button>
+      </footer>
+
+      <dialog id="ticket-dialog">
+        <div class="dialog-card">
+          <div class="done-mark">OK</div>
+          <p class="eyebrow">Reserva lista</p>
+          <h2>Tu ticket fue generado</h2>
+          <p id="ticket-copy"></p>
+          <button id="close-dialog" class="primary" type="button">Cerrar</button>
+        </div>
+      </dialog>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
