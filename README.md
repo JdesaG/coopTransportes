@@ -4,7 +4,7 @@ WebView estatico para compra simple de tickets de bus.
 
 ## Funciones
 
-- Seleccion de origen, destino, fecha y cantidad de pasajeros.
+- Seleccion de origen, destino, fecha, hora y cantidad de pasajeros.
 - Plano de bus tactil inspirado en una vista superior de asientos.
 - Asientos libres, seleccionados y ocupados.
 - Limite de seleccion segun cantidad de pasajeros.

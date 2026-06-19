@@ -17,6 +17,7 @@ const seatMap = document.querySelector("#seat-map");
 const originInput = document.querySelector("#origin");
 const destinationInput = document.querySelector("#destination");
 const dateInput = document.querySelector("#travel-date");
+const timeInput = document.querySelector("#travel-time");
 const passengersInput = document.querySelector("#passengers");
 const selectedSeatsLabel = document.querySelector("#selected-seats");
 const totalPriceLabel = document.querySelector("#total-price");
@@ -168,6 +169,7 @@ function buildTicket(paymentMethod) {
     origin: originInput.value,
     destination: destinationInput.value,
     date: dateInput.value,
+    time: timeInput.value,
     seats: [...selectedSeats],
     passengers: getSeatLimit(),
     paymentMethod,
@@ -206,6 +208,7 @@ function buyTickets(paymentMethod) {
   const copy = [
     `${ticket.origin} a ${ticket.destination}`,
     `Fecha: ${ticket.date}`,
+    `Hora: ${ticket.time}`,
     `Asientos: ${ticket.seats.join(", ")}`,
     `Pago: ${ticket.paymentMethod}`,
     `Total: ${ticket.total}`
@@ -240,7 +243,7 @@ function validateTicket(rawValue) {
     return;
   }
 
-  scanResult.textContent = `Ticket valido: ${ticket.origin} a ${ticket.destination}, asiento(s) ${ticket.seats.join(", ")}.`;
+  scanResult.textContent = `Ticket valido: ${ticket.origin} a ${ticket.destination}, ${ticket.date} ${ticket.time}, asiento(s) ${ticket.seats.join(", ")}.`;
   scanResult.className = "scan-result is-valid";
 }
 

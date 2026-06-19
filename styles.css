@@ -187,6 +187,11 @@ select:focus {
   gap: 12px;
 }
 
+.single-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .seat-heading {
   display: grid;
   gap: 10px;
