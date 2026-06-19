@@ -25,14 +25,38 @@ const parcelDate = document.querySelector("#parcel-date");
 const parcelWeight = document.querySelector("#parcel-weight");
 const parcelTotal = document.querySelector("#parcel-total");
 const parcelDialog = document.querySelector("#parcel-dialog");
+const parcelCardDialog = document.querySelector("#parcel-card-dialog");
 const parcelCopy = document.querySelector("#parcel-copy");
 const parcelCode = document.querySelector("#parcel-code");
+const parcelCallbackStatus = document.querySelector("#parcel-callback-status");
+const closeParcelDialog = document.querySelector("#close-parcel-dialog");
+const selectParcelDemoCard = document.querySelector("#select-parcel-demo-card");
+const cancelParcelCard = document.querySelector("#cancel-parcel-card");
+
+const CALLBACK_PROXY_URL = "/api/callback";
+const WHATSAPP_CHAT_URL = "https://wa.me/593996678900";
+const CARD_SUCCESS_MESSAGE = "Excelente, tu pago con tarjeta se ha hecho efectivo.";
+const CASH_SUCCESS_MESSAGE = "Listo, tu boleto ha sido generado al subir al bus puedes realizar el pago del boleto.";
+const DEMO_CARD = {
+  brand: "Visa",
+  last4: "4582",
+  holder: "Cliente Coop",
+  expires: "08/28"
+};
 
 function openDialog(targetDialog) {
   if (targetDialog.showModal) {
     targetDialog.showModal();
   } else {
     targetDialog.setAttribute("open", "");
+  }
+}
+
+function closeModal(targetDialog) {
+  if (targetDialog.close) {
+    targetDialog.close();
+  } else {
+    targetDialog.removeAttribute("open");
   }
 }
 
@@ -48,6 +72,40 @@ function createParcelId() {
   const time = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `ENC-${time}-${random}`;
+}
+
+function getExecutionId() {
+  return new URLSearchParams(window.location.search).get("executionId") || "";
+}
+
+function redirectToWhatsApp() {
+  window.location.href = WHATSAPP_CHAT_URL;
+}
+
+async function sendCallback(body) {
+  const response = await fetch(CALLBACK_PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    throw new Error(detail.error || `Callback failed with status ${response.status}`);
+  }
+
+  return response;
+}
+
+function getPaymentMessage(paymentMethod) {
+  return paymentMethod === "Tarjeta" ? CARD_SUCCESS_MESSAGE : CASH_SUCCESS_MESSAGE;
+}
+
+function scheduleWhatsAppRedirect() {
+  if (!getExecutionId()) return;
+  window.setTimeout(redirectToWhatsApp, 1200);
 }
 
 function getRouteKey() {
@@ -85,7 +143,9 @@ function getPerson(prefix) {
   };
 }
 
-function buildParcel() {
+function buildParcel(paymentCard = null) {
+  const paymentMethod = document.querySelector("#parcel-payment").value;
+
   return {
     id: createParcelId(),
     origin: parcelOrigin.value,
@@ -93,13 +153,80 @@ function buildParcel() {
     date: parcelDate.value,
     weight: parcelWeight.value,
     content: document.querySelector("#parcel-content").value.trim(),
-    paymentMethod: document.querySelector("#parcel-payment").value,
+    paymentMethod,
+    paymentCard,
+    chatbotMessage: getPaymentMessage(paymentMethod),
     sender: getPerson("sender"),
     receiver: getPerson("receiver"),
     total: formatPrice(getParcelTotal()),
     status: "registrada",
     createdAt: new Date().toISOString()
   };
+}
+
+async function sendParcelCallback(parcel) {
+  const executionId = getExecutionId();
+
+  if (!executionId) {
+    parcelCallbackStatus.textContent = "Demo local: encomienda generada. En Jelou se enviara el callback y se abrira WhatsApp.";
+    return;
+  }
+
+  parcelCallbackStatus.textContent = "Confirmando con Jelou...";
+
+  await sendCallback({
+    executionId,
+    success: true,
+    data: {
+      tipo_operacion: "envio_encomienda",
+      status: "completed",
+      mensaje: parcel.chatbotMessage,
+      mensaje_chatbot: parcel.chatbotMessage,
+      encomienda_id: parcel.id,
+      origen: parcel.origin,
+      destino: parcel.destination,
+      fecha: parcel.date,
+      peso: parcel.weight,
+      contenido: parcel.content,
+      remitente: parcel.sender,
+      destinatario: parcel.receiver,
+      metodo_pago: parcel.paymentMethod,
+      estado_pago: parcel.paymentMethod === "Tarjeta" ? "pagado" : "pendiente_en_terminal",
+      tarjeta: parcel.paymentCard,
+      total: parcel.total
+    }
+  });
+
+  parcelCallbackStatus.textContent = "Confirmado con Jelou. Volviendo a WhatsApp...";
+  scheduleWhatsAppRedirect();
+}
+
+async function finishParcel(paymentCard = null) {
+  const parcel = buildParcel(paymentCard);
+  saveParcel(parcel);
+
+  parcelCopy.textContent = [
+    `${parcel.origin} a ${parcel.destination}`,
+    `Fecha: ${parcel.date}`,
+    `Remitente: ${parcel.sender.fullName}`,
+    `Destinatario: ${parcel.receiver.fullName}`,
+    `Contenido: ${parcel.content}`,
+    `Peso: ${parcel.weight}`,
+    `Pago: ${parcel.paymentMethod}`,
+    parcel.paymentCard ? `Tarjeta: ${parcel.paymentCard.brand} •••• ${parcel.paymentCard.last4}` : "",
+    `Total: ${parcel.total}`
+  ].filter(Boolean).join("\n");
+  parcelCode.textContent = parcel.id;
+  parcelCallbackStatus.textContent = "Confirmando con Jelou...";
+  closeModal(parcelCardDialog);
+  openDialog(parcelDialog);
+
+  try {
+    await sendParcelCallback(parcel);
+  } catch (error) {
+    parcelCallbackStatus.textContent = "No se pudo confirmar con Jelou. Revisa el WebView o intenta nuevamente.";
+    console.error(error);
+  }
 }
 
 function submitParcel(event) {
@@ -113,21 +240,12 @@ function submitParcel(event) {
 
   if (!parcelForm.reportValidity()) return;
 
-  const parcel = buildParcel();
-  saveParcel(parcel);
+  if (document.querySelector("#parcel-payment").value === "Tarjeta") {
+    openDialog(parcelCardDialog);
+    return;
+  }
 
-  parcelCopy.textContent = [
-    `${parcel.origin} a ${parcel.destination}`,
-    `Fecha: ${parcel.date}`,
-    `Remitente: ${parcel.sender.fullName}`,
-    `Destinatario: ${parcel.receiver.fullName}`,
-    `Contenido: ${parcel.content}`,
-    `Peso: ${parcel.weight}`,
-    `Pago: ${parcel.paymentMethod}`,
-    `Total: ${parcel.total}`
-  ].join("\n");
-  parcelCode.textContent = parcel.id;
-  openDialog(parcelDialog);
+  finishParcel();
 }
 
 parcelDate.min = getToday();
@@ -138,3 +256,6 @@ parcelOrigin.addEventListener("change", updateParcelTotal);
 parcelDestination.addEventListener("change", updateParcelTotal);
 parcelWeight.addEventListener("change", updateParcelTotal);
 parcelForm.addEventListener("submit", submitParcel);
+selectParcelDemoCard.addEventListener("click", () => finishParcel(DEMO_CARD));
+cancelParcelCard.addEventListener("click", () => closeModal(parcelCardDialog));
+closeParcelDialog.addEventListener("click", redirectToWhatsApp);

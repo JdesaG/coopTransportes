@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Coop Transportes | Tickets</title>
-    <link rel="stylesheet" href="./styles.css?v=20260619-mobile-only" />
+    <link rel="stylesheet" href="./styles.css?v=20260619-jelou-callback" />
   </head>
   <body class="mobile-webview">
     <main class="app-shell">
@@ -129,9 +129,10 @@
           <p class="eyebrow">Reserva lista</p>
           <h2>Tu ticket fue generado</h2>
           <p id="ticket-copy"></p>
+          <p id="ticket-callback-status" class="callback-status">Confirmando con Jelou...</p>
           <canvas id="ticket-qr" width="180" height="180" aria-label="Codigo QR del ticket"></canvas>
           <strong id="ticket-code" class="ticket-code"></strong>
-          <button id="close-dialog" class="primary" type="button">Cerrar</button>
+          <button id="close-dialog" class="primary" type="button">Volver a WhatsApp</button>
         </div>
       </dialog>
 
@@ -155,9 +156,22 @@
         </div>
       </dialog>
 
+      <dialog id="card-dialog">
+        <div class="dialog-card">
+          <p class="eyebrow">Tarjeta guardada</p>
+          <h2>Selecciona una tarjeta</h2>
+          <button id="select-demo-card" class="saved-card" type="button">
+            <span>Visa</span>
+            <strong>•••• 4582</strong>
+            <small>Juan Carlos Perez · vence 08/28</small>
+          </button>
+          <button id="cancel-card" class="secondary" type="button">Volver</button>
+        </div>
+      </dialog>
+
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="./script.js?v=20260619-mobile-only"></script>
+    <script src="./script.js?v=20260619-jelou-callback"></script>
   </body>
 </html>

@@ -24,11 +24,15 @@ const buyButton = document.querySelector("#buy-button");
 const clearButton = document.querySelector("#clear-button");
 const dialog = document.querySelector("#ticket-dialog");
 const paymentDialog = document.querySelector("#payment-dialog");
+const cardDialog = document.querySelector("#card-dialog");
 const cancelPayment = document.querySelector("#cancel-payment");
+const cancelCard = document.querySelector("#cancel-card");
+const selectDemoCard = document.querySelector("#select-demo-card");
 const closeTicketDialogButton = document.querySelector("#close-dialog");
 const ticketCopy = document.querySelector("#ticket-copy");
 const ticketQr = document.querySelector("#ticket-qr");
 const ticketCode = document.querySelector("#ticket-code");
+const ticketCallbackStatus = document.querySelector("#ticket-callback-status");
 const passengerDialog = document.querySelector("#passenger-dialog");
 const passengerForm = document.querySelector("#passenger-form");
 const passengerFields = document.querySelector("#passenger-fields");
@@ -37,6 +41,17 @@ const cancelPassengers = document.querySelector("#cancel-passengers");
 
 let selectedSeats = [];
 let currentPassengers = [];
+
+const CALLBACK_PROXY_URL = "/api/callback";
+const WHATSAPP_CHAT_URL = "https://wa.me/593996678900";
+const CARD_SUCCESS_MESSAGE = "Excelente, tu pago con tarjeta se ha hecho efectivo.";
+const CASH_SUCCESS_MESSAGE = "Listo, tu boleto ha sido generado al subir al bus puedes realizar el pago del boleto.";
+const DEMO_CARD = {
+  brand: "Visa",
+  last4: "4582",
+  holder: "Juan Carlos Perez",
+  expires: "08/28"
+};
 
 function openDialog(targetDialog) {
   if (targetDialog.showModal) {
@@ -101,6 +116,40 @@ function createTicketId() {
   const time = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `CT-${time}-${random}`;
+}
+
+function getExecutionId() {
+  return new URLSearchParams(window.location.search).get("executionId") || "";
+}
+
+function redirectToWhatsApp() {
+  window.location.href = WHATSAPP_CHAT_URL;
+}
+
+async function sendCallback(body) {
+  const response = await fetch(CALLBACK_PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    throw new Error(detail.error || `Callback failed with status ${response.status}`);
+  }
+
+  return response;
+}
+
+function getPaymentMessage(paymentMethod) {
+  return paymentMethod === "Tarjeta" ? CARD_SUCCESS_MESSAGE : CASH_SUCCESS_MESSAGE;
+}
+
+function scheduleWhatsAppRedirect() {
+  if (!getExecutionId()) return;
+  window.setTimeout(redirectToWhatsApp, 1200);
 }
 
 function createSeat(seatId) {
@@ -226,7 +275,7 @@ function submitPassengers(event) {
   openDialog(paymentDialog);
 }
 
-function buildTicket(paymentMethod) {
+function buildTicket(paymentMethod, paymentCard = null) {
   return {
     id: createTicketId(),
     origin: originInput.value,
@@ -237,6 +286,8 @@ function buildTicket(paymentMethod) {
     passengers: getSeatLimit(),
     passengerDetails: currentPassengers,
     paymentMethod,
+    paymentCard,
+    chatbotMessage: getPaymentMessage(paymentMethod),
     total: formatPrice(selectedSeats.length * getTicketPrice()),
     status: "valid",
     createdAt: new Date().toISOString()
@@ -267,8 +318,44 @@ function renderQr(ticket) {
   });
 }
 
-function buyTickets(paymentMethod) {
-  const ticket = buildTicket(paymentMethod);
+async function sendTicketCallback(ticket) {
+  const executionId = getExecutionId();
+
+  if (!executionId) {
+    ticketCallbackStatus.textContent = "Demo local: ticket generado. En Jelou se enviara el callback y se abrira WhatsApp.";
+    return;
+  }
+
+  ticketCallbackStatus.textContent = "Confirmando con Jelou...";
+
+  await sendCallback({
+    executionId,
+    success: true,
+    data: {
+      tipo_operacion: "compra_ticket",
+      status: "completed",
+      mensaje: ticket.chatbotMessage,
+      mensaje_chatbot: ticket.chatbotMessage,
+      ticket_id: ticket.id,
+      origen: ticket.origin,
+      destino: ticket.destination,
+      fecha: ticket.date,
+      hora: ticket.time,
+      asientos: ticket.seats,
+      pasajeros: ticket.passengerDetails,
+      metodo_pago: ticket.paymentMethod,
+      estado_pago: ticket.paymentMethod === "Tarjeta" ? "pagado" : "pendiente_en_bus",
+      tarjeta: ticket.paymentCard,
+      total: ticket.total
+    }
+  });
+
+  ticketCallbackStatus.textContent = "Confirmado con Jelou. Volviendo a WhatsApp...";
+  scheduleWhatsAppRedirect();
+}
+
+async function buyTickets(paymentMethod, paymentCard = null) {
+  const ticket = buildTicket(paymentMethod, paymentCard);
   const copy = [
     `${ticket.origin} a ${ticket.destination}`,
     `Fecha: ${ticket.date}`,
@@ -276,14 +363,24 @@ function buyTickets(paymentMethod) {
     `Asientos: ${ticket.seats.join(", ")}`,
     `Pasajeros: ${ticket.passengerDetails.map((passenger) => passenger.fullName).join(", ")}`,
     `Pago: ${ticket.paymentMethod}`,
+    ticket.paymentCard ? `Tarjeta: ${ticket.paymentCard.brand} •••• ${ticket.paymentCard.last4}` : "",
     `Total: ${ticket.total}`
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 
   saveTicket(ticket);
   ticketCopy.textContent = copy;
+  ticketCallbackStatus.textContent = "Confirmando con Jelou...";
   renderQr(ticket);
   closeModal(paymentDialog);
+  closeModal(cardDialog);
   openDialog(dialog);
+
+  try {
+    await sendTicketCallback(ticket);
+  } catch (error) {
+    ticketCallbackStatus.textContent = "No se pudo confirmar con Jelou. Revisa el WebView o intenta nuevamente.";
+    console.error(error);
+  }
 }
 
 function setDefaultDate() {
@@ -304,7 +401,20 @@ buyButton.addEventListener("click", openPassengerForm);
 passengerForm.addEventListener("submit", submitPassengers);
 cancelPassengers.addEventListener("click", () => closeModal(passengerDialog));
 document.querySelectorAll("[data-payment]").forEach((button) => {
-  button.addEventListener("click", () => buyTickets(button.dataset.payment));
+  button.addEventListener("click", () => {
+    if (button.dataset.payment === "Tarjeta") {
+      closeModal(paymentDialog);
+      openDialog(cardDialog);
+      return;
+    }
+
+    buyTickets(button.dataset.payment);
+  });
 });
 cancelPayment.addEventListener("click", () => closeModal(paymentDialog));
-closeTicketDialogButton.addEventListener("click", () => closeModal(dialog));
+cancelCard.addEventListener("click", () => {
+  closeModal(cardDialog);
+  openDialog(paymentDialog);
+});
+selectDemoCard.addEventListener("click", () => buyTickets("Tarjeta", DEMO_CARD));
+closeTicketDialogButton.addEventListener("click", redirectToWhatsApp);

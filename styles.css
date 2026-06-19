@@ -735,6 +735,15 @@ dialog::backdrop {
   overflow-wrap: anywhere;
 }
 
+.callback-status {
+  min-height: 42px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--muted) !important;
+  font-weight: 800;
+}
+
 .passenger-fields,
 .parcel-form {
   display: grid;
@@ -869,6 +878,31 @@ dialog::backdrop {
   color: var(--primary);
   font-size: 17px;
   font-weight: 950;
+}
+
+.saved-card {
+  display: grid;
+  gap: 6px;
+  min-height: 124px;
+  padding: 18px;
+  border: 1px solid #b7d9f3;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(8, 103, 178, 0.94), rgba(6, 74, 128, 0.96)),
+    var(--primary);
+  color: white;
+  cursor: pointer;
+  text-align: left;
+}
+
+.saved-card span,
+.saved-card small {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
+}
+
+.saved-card strong {
+  font-size: 24px;
 }
 
 .scanner-video {

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Coop Transportes | Encomiendas</title>
-    <link rel="stylesheet" href="./styles.css?v=20260619-mobile-only" />
+    <link rel="stylesheet" href="./styles.css?v=20260619-jelou-callback" />
   </head>
   <body class="mobile-webview">
     <main class="app-shell">
@@ -120,12 +120,26 @@
           <p class="eyebrow">Encomienda registrada</p>
           <h2>Orden generada</h2>
           <p id="parcel-copy"></p>
+          <p id="parcel-callback-status" class="callback-status">Confirmando con Jelou...</p>
           <strong id="parcel-code" class="ticket-code"></strong>
-          <a class="primary action-link" href="./index.html">Volver al inicio</a>
+          <button id="close-parcel-dialog" class="primary" type="button">Volver a WhatsApp</button>
+        </div>
+      </dialog>
+
+      <dialog id="parcel-card-dialog">
+        <div class="dialog-card">
+          <p class="eyebrow">Tarjeta guardada</p>
+          <h2>Selecciona una tarjeta</h2>
+          <button id="select-parcel-demo-card" class="saved-card" type="button">
+            <span>Visa</span>
+            <strong>•••• 4582</strong>
+            <small>Cliente Coop · vence 08/28</small>
+          </button>
+          <button id="cancel-parcel-card" class="secondary" type="button">Volver</button>
         </div>
       </dialog>
     </main>
 
-    <script src="./encomiendas.js?v=20260619-mobile-only"></script>
+    <script src="./encomiendas.js?v=20260619-jelou-callback"></script>
   </body>
 </html>
