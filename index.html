@@ -3,176 +3,77 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Coop Transportes</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <title>Coop Transportes | Cliente</title>
+    <link rel="stylesheet" href="./styles.css?v=20260619-scanner-dashboard" />
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <span class="brand-mark">CT</span>
+          <img class="brand-logo" src="./assets/zamora-chinchipe-logo.jpg" alt="Cooperativa de Transporte Zamora Chinchipe" />
           <div>
             <p>Coop Transportes</p>
-            <h1>Compra de tickets</h1>
+            <h1>Mi cuenta</h1>
           </div>
         </div>
-        <span class="secure-pill">WebView</span>
+        <span class="secure-pill">Cliente</span>
       </header>
 
-      <section class="route-panel" aria-label="Datos del viaje">
-        <label>
-          <span>Origen</span>
-          <select id="origin">
-            <option value="Quito">Quito</option>
-            <option value="Guayaquil">Guayaquil</option>
-            <option value="Cuenca">Cuenca</option>
-            <option value="Manta">Manta</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Destino</span>
-          <select id="destination">
-            <option value="Guayaquil">Guayaquil</option>
-            <option value="Quito">Quito</option>
-            <option value="Cuenca">Cuenca</option>
-            <option value="Manta">Manta</option>
-          </select>
-        </label>
-
-        <div class="inline-fields">
-          <label>
-            <span>Fecha</span>
-            <input id="travel-date" type="date" />
-          </label>
-          <label>
-            <span>Pasajeros</span>
-            <select id="passengers">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-            </select>
-          </label>
-        </div>
-
-        <fieldset class="schedule-field">
-          <legend>Horario de salida</legend>
-          <div class="schedule-grid">
-            <label><input type="radio" name="travel-time" value="09:00" checked /><span>09:00</span></label>
-            <label><input type="radio" name="travel-time" value="10:00" /><span>10:00</span></label>
-            <label><input type="radio" name="travel-time" value="11:00" /><span>11:00</span></label>
-            <label><input type="radio" name="travel-time" value="12:00" /><span>12:00</span></label>
-            <label><input type="radio" name="travel-time" value="13:00" /><span>13:00</span></label>
-            <label><input type="radio" name="travel-time" value="14:00" /><span>14:00</span></label>
-            <label><input type="radio" name="travel-time" value="15:00" /><span>15:00</span></label>
-            <label><input type="radio" name="travel-time" value="16:00" /><span>16:00</span></label>
-            <label><input type="radio" name="travel-time" value="17:00" /><span>17:00</span></label>
-          </div>
-        </fieldset>
+      <section class="dashboard-hero">
+        <p>Bienvenido</p>
+        <h2>Compra, envia y consulta tus movimientos</h2>
+        <span>Demo conectada con datos locales para presentar el flujo completo.</span>
       </section>
 
-      <section class="ticket-tools" aria-label="Registro de tickets">
-        <button id="open-scanner-button" class="secondary" type="button">Escanear QR</button>
+      <section class="ticket-tools dashboard-tools" aria-label="Registro de tickets">
+        <button id="dashboard-scan-button" class="secondary" type="button">Escanear QR</button>
         <div>
           <span>Registro</span>
-          <strong id="ticket-count">0 tickets</strong>
+          <strong id="dashboard-scan-ticket-count">0 tickets</strong>
         </div>
       </section>
 
-      <section class="seat-heading">
-        <div>
-          <p>Selecciona tus asientos</p>
-          <h2>Toque sobre el asiento</h2>
+      <section class="metric-grid" aria-label="Resumen">
+        <div class="metric-card">
+          <span>Tickets</span>
+          <strong id="dashboard-ticket-count">0</strong>
         </div>
-        <div class="legend" aria-label="Leyenda de asientos">
-          <span><i class="sample available"></i>Libre</span>
-          <span><i class="sample selected"></i>Elegido</span>
-          <span><i class="sample taken"></i>Ocupado</span>
-        </div>
-      </section>
-
-      <section class="bus-wrap" aria-label="Mapa de asientos del bus">
-        <div class="bus">
-          <div class="driver-row">
-            <span class="door"></span>
-            <span class="driver-seat" aria-label="Conductor"></span>
-          </div>
-          <div id="seat-map" class="seat-map"></div>
+        <div class="metric-card">
+          <span>Encomiendas</span>
+          <strong id="dashboard-parcel-count">0</strong>
         </div>
       </section>
 
-      <section class="summary-bar" aria-label="Resumen de compra">
-        <div>
-          <span>Asientos</span>
-          <strong id="selected-seats">Ninguno</strong>
+      <section class="activity-section">
+        <div class="section-title">
+          <p>Ultimos movimientos</p>
+          <h2>Actividad reciente</h2>
         </div>
-        <div>
-          <span>Total</span>
-          <strong id="total-price">$0.00</strong>
-        </div>
+        <div id="activity-list" class="activity-list"></div>
       </section>
 
-      <footer class="actions">
-        <button id="clear-button" class="secondary" type="button">Limpiar</button>
-        <button id="buy-button" class="primary" type="button" disabled>Comprar ticket</button>
-      </footer>
-
-      <dialog id="ticket-dialog">
-        <div class="dialog-card">
-          <div class="done-mark">OK</div>
-          <p class="eyebrow">Reserva lista</p>
-          <h2>Tu ticket fue generado</h2>
-          <p id="ticket-copy"></p>
-          <canvas id="ticket-qr" width="180" height="180" aria-label="Codigo QR del ticket"></canvas>
-          <strong id="ticket-code" class="ticket-code"></strong>
-          <button id="close-dialog" class="primary" type="button">Cerrar</button>
-        </div>
-      </dialog>
-
-      <dialog id="payment-dialog">
-        <div class="dialog-card">
-          <p class="eyebrow">Metodo de pago</p>
-          <h2>Como quieres pagar?</h2>
-          <div class="payment-options">
-            <button class="payment-card" type="button" data-payment="Tarjeta">
-              <span class="payment-icon">••••</span>
-              <strong>Tarjeta</strong>
-              <small>Debito o credito</small>
-            </button>
-            <button class="payment-card" type="button" data-payment="Efectivo">
-              <span class="payment-icon">$</span>
-              <strong>Efectivo</strong>
-              <small>Paga en terminal</small>
-            </button>
-          </div>
-          <button id="cancel-payment" class="secondary" type="button">Volver</button>
-        </div>
-      </dialog>
-
-      <dialog id="scanner-dialog">
+      <dialog id="dashboard-scanner-dialog">
         <div class="dialog-card">
           <p class="eyebrow">Validar ticket</p>
           <h2>Lector de QR</h2>
-          <video id="scanner-video" class="scanner-video" playsinline></video>
-          <canvas id="scanner-canvas" hidden></canvas>
-          <p id="scan-result">Inicia la camara o pega el codigo del ticket.</p>
+          <video id="dashboard-scanner-video" class="scanner-video" playsinline></video>
+          <canvas id="dashboard-scanner-canvas" hidden></canvas>
+          <p id="dashboard-scan-result">Inicia la camara o pega el codigo del ticket.</p>
           <div class="scanner-actions">
-            <button id="start-scan" class="primary" type="button">Iniciar camara</button>
-            <button id="stop-scan" class="secondary" type="button">Detener</button>
+            <button id="dashboard-start-scan" class="primary" type="button">Iniciar camara</button>
+            <button id="dashboard-stop-scan" class="secondary" type="button">Detener</button>
           </div>
           <label class="manual-code">
             <span>Codigo manual</span>
-            <input id="manual-ticket-code" type="text" autocomplete="off" placeholder="CT-..." />
+            <input id="dashboard-manual-ticket-code" type="text" autocomplete="off" placeholder="CT-..." />
           </label>
-          <button id="validate-manual-code" class="secondary" type="button">Validar codigo</button>
-          <button id="close-scanner" class="secondary" type="button">Cerrar</button>
+          <button id="dashboard-validate-manual-code" class="secondary" type="button">Validar codigo</button>
+          <button id="dashboard-close-scanner" class="secondary" type="button">Cerrar</button>
         </div>
       </dialog>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    <script src="./script.js"></script>
+    <script src="./dashboard.js?v=20260619-scanner-dashboard"></script>
   </body>
 </html>

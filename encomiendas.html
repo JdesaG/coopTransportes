@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Coop Transportes | Encomiendas</title>
+    <link rel="stylesheet" href="./styles.css?v=20260619-scanner-dashboard" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-logo" src="./assets/zamora-chinchipe-logo.jpg" alt="Cooperativa de Transporte Zamora Chinchipe" />
+          <div>
+            <p>Coop Transportes</p>
+            <h1>Enviar encomienda</h1>
+          </div>
+        </div>
+        <a class="secure-pill link-pill" href="./index.html">Inicio</a>
+      </header>
+
+      <form id="parcel-form" class="parcel-form">
+        <section class="route-panel" aria-label="Ruta de encomienda">
+          <label>
+            <span>Origen</span>
+            <select id="parcel-origin" required>
+              <option value="Quito">Quito</option>
+              <option value="Guayaquil">Guayaquil</option>
+              <option value="Cuenca">Cuenca</option>
+              <option value="Manta">Manta</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Destino</span>
+            <select id="parcel-destination" required>
+              <option value="Guayaquil">Guayaquil</option>
+              <option value="Quito">Quito</option>
+              <option value="Cuenca">Cuenca</option>
+              <option value="Manta">Manta</option>
+            </select>
+          </label>
+
+          <div class="inline-fields">
+            <label>
+              <span>Fecha</span>
+              <input id="parcel-date" type="date" required />
+            </label>
+            <label>
+              <span>Peso</span>
+              <select id="parcel-weight" required>
+                <option value="Hasta 2 kg">Hasta 2 kg</option>
+                <option value="2 a 5 kg">2 a 5 kg</option>
+                <option value="5 a 10 kg">5 a 10 kg</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">
+            <p>Remitente</p>
+            <h2>Persona que envia</h2>
+          </div>
+          <label>
+            <span>Nombres completos</span>
+            <input id="sender-name" type="text" autocomplete="name" required minlength="5" placeholder="Ej. Ana Maria Torres" />
+          </label>
+          <label>
+            <span>Cedula</span>
+            <input id="sender-id" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10 digitos" />
+          </label>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">
+            <p>Destinatario</p>
+            <h2>Persona que recibe</h2>
+          </div>
+          <label>
+            <span>Nombres completos</span>
+            <input id="receiver-name" type="text" autocomplete="name" required minlength="5" placeholder="Ej. Luis Fernando Mora" />
+          </label>
+          <label>
+            <span>Cedula</span>
+            <input id="receiver-id" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10 digitos" />
+          </label>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">
+            <p>Paquete</p>
+            <h2>Datos de envio</h2>
+          </div>
+          <label>
+            <span>Contenido declarado</span>
+            <input id="parcel-content" type="text" required minlength="3" placeholder="Ej. Documentos" />
+          </label>
+          <label>
+            <span>Metodo de pago</span>
+            <select id="parcel-payment" required>
+              <option value="Tarjeta">Tarjeta</option>
+              <option value="Efectivo">Efectivo</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="parcel-summary" aria-label="Resumen de encomienda">
+          <div>
+            <span>Total estimado</span>
+            <strong id="parcel-total">$0.00</strong>
+          </div>
+          <button class="primary" type="submit">Generar envio</button>
+        </section>
+      </form>
+
+      <dialog id="parcel-dialog">
+        <div class="dialog-card">
+          <div class="done-mark">OK</div>
+          <p class="eyebrow">Encomienda registrada</p>
+          <h2>Orden generada</h2>
+          <p id="parcel-copy"></p>
+          <strong id="parcel-code" class="ticket-code"></strong>
+          <a class="primary action-link" href="./index.html">Volver al inicio</a>
+        </div>
+      </dialog>
+    </main>
+
+    <script src="./encomiendas.js?v=20260619-scanner-dashboard"></script>
+  </body>
+</html>

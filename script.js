@@ -24,26 +24,35 @@ const buyButton = document.querySelector("#buy-button");
 const clearButton = document.querySelector("#clear-button");
 const dialog = document.querySelector("#ticket-dialog");
 const paymentDialog = document.querySelector("#payment-dialog");
-const scannerDialog = document.querySelector("#scanner-dialog");
 const cancelPayment = document.querySelector("#cancel-payment");
-const closeDialog = document.querySelector("#close-dialog");
+const closeTicketDialogButton = document.querySelector("#close-dialog");
 const ticketCopy = document.querySelector("#ticket-copy");
 const ticketQr = document.querySelector("#ticket-qr");
 const ticketCode = document.querySelector("#ticket-code");
-const ticketCount = document.querySelector("#ticket-count");
-const openScannerButton = document.querySelector("#open-scanner-button");
-const closeScannerButton = document.querySelector("#close-scanner");
-const startScanButton = document.querySelector("#start-scan");
-const stopScanButton = document.querySelector("#stop-scan");
-const scannerVideo = document.querySelector("#scanner-video");
-const scannerCanvas = document.querySelector("#scanner-canvas");
-const scanResult = document.querySelector("#scan-result");
-const manualTicketCode = document.querySelector("#manual-ticket-code");
-const validateManualCode = document.querySelector("#validate-manual-code");
+const passengerDialog = document.querySelector("#passenger-dialog");
+const passengerForm = document.querySelector("#passenger-form");
+const passengerFields = document.querySelector("#passenger-fields");
+const passengerError = document.querySelector("#passenger-error");
+const cancelPassengers = document.querySelector("#cancel-passengers");
 
 let selectedSeats = [];
-let scanStream = null;
-let scanFrame = null;
+let currentPassengers = [];
+
+function openDialog(targetDialog) {
+  if (targetDialog.showModal) {
+    targetDialog.showModal();
+  } else {
+    targetDialog.setAttribute("open", "");
+  }
+}
+
+function closeModal(targetDialog) {
+  if (targetDialog.close) {
+    targetDialog.close();
+  } else {
+    targetDialog.removeAttribute("open");
+  }
+}
 
 function getTicketRegistry() {
   try {
@@ -61,8 +70,7 @@ function saveTicket(ticket) {
 }
 
 function updateTicketCount() {
-  const total = Object.keys(getTicketRegistry()).length;
-  ticketCount.textContent = `${total} ${total === 1 ? "ticket" : "tickets"}`;
+  return Object.keys(getTicketRegistry()).length;
 }
 
 function getToday() {
@@ -163,7 +171,59 @@ function syncPassengerLimit() {
 }
 
 function openPaymentMethods() {
-  paymentDialog.showModal();
+  currentPassengers = collectPassengers();
+  openDialog(paymentDialog);
+}
+
+function renderPassengerFields() {
+  passengerFields.innerHTML = selectedSeats.map((seat, index) => `
+    <fieldset class="passenger-card">
+      <legend>Asiento ${seat}</legend>
+      <label>
+        <span>Nombres completos</span>
+        <input name="passenger-name-${index}" type="text" minlength="5" required placeholder="Ej. Carlos Andres Perez" />
+      </label>
+      <label>
+        <span>Cedula</span>
+        <input name="passenger-id-${index}" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10 digitos" />
+      </label>
+    </fieldset>
+  `).join("");
+  passengerError.hidden = true;
+}
+
+function openPassengerForm() {
+  renderPassengerFields();
+  openDialog(passengerDialog);
+}
+
+function collectPassengers() {
+  return selectedSeats.map((seat, index) => ({
+    seat,
+    fullName: passengerForm.elements[`passenger-name-${index}`].value.trim(),
+    documentId: passengerForm.elements[`passenger-id-${index}`].value.trim()
+  }));
+}
+
+function isValidPassengerData(passengers) {
+  return passengers.every((passenger) => (
+    passenger.fullName.split(/\s+/).filter(Boolean).length >= 2 &&
+    /^\d{10}$/.test(passenger.documentId)
+  ));
+}
+
+function submitPassengers(event) {
+  event.preventDefault();
+  const passengers = collectPassengers();
+
+  if (!isValidPassengerData(passengers)) {
+    passengerError.hidden = false;
+    return;
+  }
+
+  currentPassengers = passengers;
+  closeModal(passengerDialog);
+  openDialog(paymentDialog);
 }
 
 function buildTicket(paymentMethod) {
@@ -175,6 +235,7 @@ function buildTicket(paymentMethod) {
     time: getTravelTime(),
     seats: [...selectedSeats],
     passengers: getSeatLimit(),
+    passengerDetails: currentPassengers,
     paymentMethod,
     total: formatPrice(selectedSeats.length * getTicketPrice()),
     status: "valid",
@@ -213,6 +274,7 @@ function buyTickets(paymentMethod) {
     `Fecha: ${ticket.date}`,
     `Hora: ${ticket.time}`,
     `Asientos: ${ticket.seats.join(", ")}`,
+    `Pasajeros: ${ticket.passengerDetails.map((passenger) => passenger.fullName).join(", ")}`,
     `Pago: ${ticket.paymentMethod}`,
     `Total: ${ticket.total}`
   ].join("\n");
@@ -220,98 +282,8 @@ function buyTickets(paymentMethod) {
   saveTicket(ticket);
   ticketCopy.textContent = copy;
   renderQr(ticket);
-  paymentDialog.close();
-  dialog.showModal();
-}
-
-function getTicketIdFromScan(rawValue) {
-  const value = rawValue.trim();
-  if (!value) return "";
-
-  try {
-    const parsed = JSON.parse(value);
-    return parsed.id || "";
-  } catch {
-    return value;
-  }
-}
-
-function validateTicket(rawValue) {
-  const ticketId = getTicketIdFromScan(rawValue);
-  const ticket = getTicketRegistry()[ticketId];
-
-  if (!ticket) {
-    scanResult.textContent = "Ticket no encontrado.";
-    scanResult.className = "scan-result is-error";
-    return;
-  }
-
-  scanResult.textContent = `Ticket valido: ${ticket.origin} a ${ticket.destination}, ${ticket.date} ${ticket.time}, asiento(s) ${ticket.seats.join(", ")}.`;
-  scanResult.className = "scan-result is-valid";
-}
-
-function scanFrameLoop() {
-  if (!scanStream) return;
-
-  const context = scannerCanvas.getContext("2d", { willReadFrequently: true });
-  scannerCanvas.width = scannerVideo.videoWidth;
-  scannerCanvas.height = scannerVideo.videoHeight;
-
-  if (scannerCanvas.width && scannerCanvas.height) {
-    context.drawImage(scannerVideo, 0, 0, scannerCanvas.width, scannerCanvas.height);
-    const imageData = context.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
-    const code = window.jsQR ? window.jsQR(imageData.data, imageData.width, imageData.height) : null;
-
-    if (code?.data) {
-      validateTicket(code.data);
-      stopScanner();
-      return;
-    }
-  }
-
-  scanFrame = requestAnimationFrame(scanFrameLoop);
-}
-
-async function startScanner() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    scanResult.textContent = "La camara no esta disponible en este navegador.";
-    scanResult.className = "scan-result is-error";
-    return;
-  }
-
-  if (!window.jsQR) {
-    scanResult.textContent = "No se pudo cargar el lector QR. Usa el codigo manual.";
-    scanResult.className = "scan-result is-error";
-    return;
-  }
-
-  scanStream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" }
-  });
-  scannerVideo.srcObject = scanStream;
-  await scannerVideo.play();
-  scanResult.textContent = "Apunta la camara al QR del ticket.";
-  scanResult.className = "scan-result";
-  scanFrameLoop();
-}
-
-function stopScanner() {
-  if (scanFrame) cancelAnimationFrame(scanFrame);
-  scanFrame = null;
-
-  if (scanStream) {
-    scanStream.getTracks().forEach((track) => track.stop());
-    scanStream = null;
-  }
-
-  scannerVideo.srcObject = null;
-}
-
-function openScanner() {
-  scanResult.textContent = "Inicia la camara o pega el codigo del ticket.";
-  scanResult.className = "scan-result";
-  manualTicketCode.value = "";
-  scannerDialog.showModal();
+  closeModal(paymentDialog);
+  openDialog(dialog);
 }
 
 function setDefaultDate() {
@@ -328,22 +300,11 @@ originInput.addEventListener("change", updateSeatState);
 destinationInput.addEventListener("change", updateSeatState);
 passengersInput.addEventListener("change", syncPassengerLimit);
 clearButton.addEventListener("click", clearSelection);
-buyButton.addEventListener("click", openPaymentMethods);
+buyButton.addEventListener("click", openPassengerForm);
+passengerForm.addEventListener("submit", submitPassengers);
+cancelPassengers.addEventListener("click", () => closeModal(passengerDialog));
 document.querySelectorAll("[data-payment]").forEach((button) => {
   button.addEventListener("click", () => buyTickets(button.dataset.payment));
 });
-cancelPayment.addEventListener("click", () => paymentDialog.close());
-closeDialog.addEventListener("click", () => dialog.close());
-openScannerButton.addEventListener("click", openScanner);
-startScanButton.addEventListener("click", () => {
-  startScanner().catch(() => {
-    scanResult.textContent = "No se pudo iniciar la camara.";
-    scanResult.className = "scan-result is-error";
-  });
-});
-stopScanButton.addEventListener("click", stopScanner);
-closeScannerButton.addEventListener("click", () => {
-  stopScanner();
-  scannerDialog.close();
-});
-validateManualCode.addEventListener("click", () => validateTicket(manualTicketCode.value));
+cancelPayment.addEventListener("click", () => closeModal(paymentDialog));
+closeTicketDialogButton.addEventListener("click", () => closeModal(dialog));

@@ -1,6 +1,12 @@
 # Coop Transportes WebView
 
-WebView estatico para compra simple de tickets de bus.
+Demo estatica para venta de servicios de una cooperativa de transporte.
+
+## Pantallas
+
+- `index.html`: dashboard del cliente con accesos y actividad reciente.
+- `tickets.html`: compra de tickets con seleccion tactil de asiento.
+- `encomiendas.html`: registro de envio de encomiendas.
 
 ## Funciones
 
@@ -8,10 +14,13 @@ WebView estatico para compra simple de tickets de bus.
 - Plano de bus tactil inspirado en una vista superior de asientos.
 - Asientos libres, seleccionados y ocupados.
 - Limite de seleccion segun cantidad de pasajeros.
+- Captura de nombres completos y cedula de 10 digitos por pasajero.
 - Resumen fijo con asientos y total.
 - Confirmacion de ticket.
 - Generacion de QR por ticket.
 - Lector de QR con camara y validacion manual por codigo.
+- Flujo de encomiendas con datos de quien envia y quien recibe.
+- Registros locales para que el dashboard muestre movimientos durante la demo.
 
 ## Registro de tickets
 
@@ -31,3 +40,9 @@ python3 -m http.server 8000
 ## Deploy
 
 El proyecto es HTML, CSS y JavaScript puro, listo para Vercel o GitHub Pages.
+
+En Vercel puedes usar estos links:
+
+- `/`
+- `/tickets.html`
+- `/encomiendas.html`
