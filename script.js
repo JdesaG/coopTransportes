@@ -24,11 +24,46 @@ const buyButton = document.querySelector("#buy-button");
 const clearButton = document.querySelector("#clear-button");
 const dialog = document.querySelector("#ticket-dialog");
 const paymentDialog = document.querySelector("#payment-dialog");
+const scannerDialog = document.querySelector("#scanner-dialog");
 const cancelPayment = document.querySelector("#cancel-payment");
 const closeDialog = document.querySelector("#close-dialog");
 const ticketCopy = document.querySelector("#ticket-copy");
+const ticketQr = document.querySelector("#ticket-qr");
+const ticketCode = document.querySelector("#ticket-code");
+const ticketCount = document.querySelector("#ticket-count");
+const openScannerButton = document.querySelector("#open-scanner-button");
+const closeScannerButton = document.querySelector("#close-scanner");
+const startScanButton = document.querySelector("#start-scan");
+const stopScanButton = document.querySelector("#stop-scan");
+const scannerVideo = document.querySelector("#scanner-video");
+const scannerCanvas = document.querySelector("#scanner-canvas");
+const scanResult = document.querySelector("#scan-result");
+const manualTicketCode = document.querySelector("#manual-ticket-code");
+const validateManualCode = document.querySelector("#validate-manual-code");
 
 let selectedSeats = [];
+let scanStream = null;
+let scanFrame = null;
+
+function getTicketRegistry() {
+  try {
+    return JSON.parse(localStorage.getItem("coopTransportesTickets") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveTicket(ticket) {
+  const registry = getTicketRegistry();
+  registry[ticket.id] = ticket;
+  localStorage.setItem("coopTransportesTickets", JSON.stringify(registry));
+  updateTicketCount();
+}
+
+function updateTicketCount() {
+  const total = Object.keys(getTicketRegistry()).length;
+  ticketCount.textContent = `${total} ${total === 1 ? "ticket" : "tickets"}`;
+}
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
@@ -48,6 +83,12 @@ function getTicketPrice() {
 
 function formatPrice(value) {
   return `$${value.toFixed(2)}`;
+}
+
+function createTicketId() {
+  const time = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `CT-${time}-${random}`;
 }
 
 function createSeat(seatId) {
@@ -121,18 +162,150 @@ function openPaymentMethods() {
   paymentDialog.showModal();
 }
 
+function buildTicket(paymentMethod) {
+  return {
+    id: createTicketId(),
+    origin: originInput.value,
+    destination: destinationInput.value,
+    date: dateInput.value,
+    seats: [...selectedSeats],
+    passengers: getSeatLimit(),
+    paymentMethod,
+    total: formatPrice(selectedSeats.length * getTicketPrice()),
+    status: "valid",
+    createdAt: new Date().toISOString()
+  };
+}
+
+function renderQr(ticket) {
+  const payload = JSON.stringify({
+    type: "coop_transportes_ticket",
+    id: ticket.id
+  });
+
+  ticketCode.textContent = ticket.id;
+
+  if (!window.QRCode) {
+    ticketQr.hidden = true;
+    return;
+  }
+
+  ticketQr.hidden = false;
+  window.QRCode.toCanvas(ticketQr, payload, {
+    width: 180,
+    margin: 1,
+    color: {
+      dark: "#1f2a37",
+      light: "#ffffff"
+    }
+  });
+}
+
 function buyTickets(paymentMethod) {
+  const ticket = buildTicket(paymentMethod);
   const copy = [
-    `${originInput.value} a ${destinationInput.value}`,
-    `Fecha: ${dateInput.value}`,
-    `Asientos: ${selectedSeats.join(", ")}`,
-    `Pago: ${paymentMethod}`,
-    `Total: ${formatPrice(selectedSeats.length * getTicketPrice())}`
+    `${ticket.origin} a ${ticket.destination}`,
+    `Fecha: ${ticket.date}`,
+    `Asientos: ${ticket.seats.join(", ")}`,
+    `Pago: ${ticket.paymentMethod}`,
+    `Total: ${ticket.total}`
   ].join("\n");
 
+  saveTicket(ticket);
   ticketCopy.textContent = copy;
+  renderQr(ticket);
   paymentDialog.close();
   dialog.showModal();
+}
+
+function getTicketIdFromScan(rawValue) {
+  const value = rawValue.trim();
+  if (!value) return "";
+
+  try {
+    const parsed = JSON.parse(value);
+    return parsed.id || "";
+  } catch {
+    return value;
+  }
+}
+
+function validateTicket(rawValue) {
+  const ticketId = getTicketIdFromScan(rawValue);
+  const ticket = getTicketRegistry()[ticketId];
+
+  if (!ticket) {
+    scanResult.textContent = "Ticket no encontrado.";
+    scanResult.className = "scan-result is-error";
+    return;
+  }
+
+  scanResult.textContent = `Ticket valido: ${ticket.origin} a ${ticket.destination}, asiento(s) ${ticket.seats.join(", ")}.`;
+  scanResult.className = "scan-result is-valid";
+}
+
+function scanFrameLoop() {
+  if (!scanStream) return;
+
+  const context = scannerCanvas.getContext("2d", { willReadFrequently: true });
+  scannerCanvas.width = scannerVideo.videoWidth;
+  scannerCanvas.height = scannerVideo.videoHeight;
+
+  if (scannerCanvas.width && scannerCanvas.height) {
+    context.drawImage(scannerVideo, 0, 0, scannerCanvas.width, scannerCanvas.height);
+    const imageData = context.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+    const code = window.jsQR ? window.jsQR(imageData.data, imageData.width, imageData.height) : null;
+
+    if (code?.data) {
+      validateTicket(code.data);
+      stopScanner();
+      return;
+    }
+  }
+
+  scanFrame = requestAnimationFrame(scanFrameLoop);
+}
+
+async function startScanner() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scanResult.textContent = "La camara no esta disponible en este navegador.";
+    scanResult.className = "scan-result is-error";
+    return;
+  }
+
+  if (!window.jsQR) {
+    scanResult.textContent = "No se pudo cargar el lector QR. Usa el codigo manual.";
+    scanResult.className = "scan-result is-error";
+    return;
+  }
+
+  scanStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }
+  });
+  scannerVideo.srcObject = scanStream;
+  await scannerVideo.play();
+  scanResult.textContent = "Apunta la camara al QR del ticket.";
+  scanResult.className = "scan-result";
+  scanFrameLoop();
+}
+
+function stopScanner() {
+  if (scanFrame) cancelAnimationFrame(scanFrame);
+  scanFrame = null;
+
+  if (scanStream) {
+    scanStream.getTracks().forEach((track) => track.stop());
+    scanStream = null;
+  }
+
+  scannerVideo.srcObject = null;
+}
+
+function openScanner() {
+  scanResult.textContent = "Inicia la camara o pega el codigo del ticket.";
+  scanResult.className = "scan-result";
+  manualTicketCode.value = "";
+  scannerDialog.showModal();
 }
 
 function setDefaultDate() {
@@ -143,6 +316,7 @@ function setDefaultDate() {
 renderSeatMap();
 setDefaultDate();
 updateSeatState();
+updateTicketCount();
 
 originInput.addEventListener("change", updateSeatState);
 destinationInput.addEventListener("change", updateSeatState);
@@ -154,3 +328,16 @@ document.querySelectorAll("[data-payment]").forEach((button) => {
 });
 cancelPayment.addEventListener("click", () => paymentDialog.close());
 closeDialog.addEventListener("click", () => dialog.close());
+openScannerButton.addEventListener("click", openScanner);
+startScanButton.addEventListener("click", () => {
+  startScanner().catch(() => {
+    scanResult.textContent = "No se pudo iniciar la camara.";
+    scanResult.className = "scan-result is-error";
+  });
+});
+stopScanButton.addEventListener("click", stopScanner);
+closeScannerButton.addEventListener("click", () => {
+  stopScanner();
+  scannerDialog.close();
+});
+validateManualCode.addEventListener("click", () => validateTicket(manualTicketCode.value));

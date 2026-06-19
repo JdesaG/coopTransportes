@@ -57,6 +57,14 @@
         </div>
       </section>
 
+      <section class="ticket-tools" aria-label="Registro de tickets">
+        <button id="open-scanner-button" class="secondary" type="button">Escanear QR</button>
+        <div>
+          <span>Registro</span>
+          <strong id="ticket-count">0 tickets</strong>
+        </div>
+      </section>
+
       <section class="seat-heading">
         <div>
           <p>Selecciona tus asientos</p>
@@ -101,6 +109,8 @@
           <p class="eyebrow">Reserva lista</p>
           <h2>Tu ticket fue generado</h2>
           <p id="ticket-copy"></p>
+          <canvas id="ticket-qr" width="180" height="180" aria-label="Codigo QR del ticket"></canvas>
+          <strong id="ticket-code" class="ticket-code"></strong>
           <button id="close-dialog" class="primary" type="button">Cerrar</button>
         </div>
       </dialog>
@@ -124,8 +134,30 @@
           <button id="cancel-payment" class="secondary" type="button">Volver</button>
         </div>
       </dialog>
+
+      <dialog id="scanner-dialog">
+        <div class="dialog-card">
+          <p class="eyebrow">Validar ticket</p>
+          <h2>Lector de QR</h2>
+          <video id="scanner-video" class="scanner-video" playsinline></video>
+          <canvas id="scanner-canvas" hidden></canvas>
+          <p id="scan-result">Inicia la camara o pega el codigo del ticket.</p>
+          <div class="scanner-actions">
+            <button id="start-scan" class="primary" type="button">Iniciar camara</button>
+            <button id="stop-scan" class="secondary" type="button">Detener</button>
+          </div>
+          <label class="manual-code">
+            <span>Codigo manual</span>
+            <input id="manual-ticket-code" type="text" autocomplete="off" placeholder="CT-..." />
+          </label>
+          <button id="validate-manual-code" class="secondary" type="button">Validar codigo</button>
+          <button id="close-scanner" class="secondary" type="button">Cerrar</button>
+        </div>
+      </dialog>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="./script.js"></script>
   </body>
 </html>
