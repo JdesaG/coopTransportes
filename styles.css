@@ -187,9 +187,54 @@ select:focus {
   gap: 12px;
 }
 
-.single-field {
+.schedule-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.schedule-field legend {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-grid label {
+  display: block;
+}
+
+.schedule-grid input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.schedule-grid span {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.schedule-grid input:checked + span {
+  border-color: var(--primary);
+  background: #eff8ff;
+  color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(8, 103, 178, 0.1);
 }
 
 .seat-heading {

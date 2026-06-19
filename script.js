@@ -17,7 +17,6 @@ const seatMap = document.querySelector("#seat-map");
 const originInput = document.querySelector("#origin");
 const destinationInput = document.querySelector("#destination");
 const dateInput = document.querySelector("#travel-date");
-const timeInput = document.querySelector("#travel-time");
 const passengersInput = document.querySelector("#passengers");
 const selectedSeatsLabel = document.querySelector("#selected-seats");
 const totalPriceLabel = document.querySelector("#total-price");
@@ -80,6 +79,10 @@ function getSeatLimit() {
 
 function getTicketPrice() {
   return ROUTE_PRICES[getRouteKey()] || ROUTE_PRICES.default;
+}
+
+function getTravelTime() {
+  return document.querySelector('input[name="travel-time"]:checked')?.value || "09:00";
 }
 
 function formatPrice(value) {
@@ -169,7 +172,7 @@ function buildTicket(paymentMethod) {
     origin: originInput.value,
     destination: destinationInput.value,
     date: dateInput.value,
-    time: timeInput.value,
+    time: getTravelTime(),
     seats: [...selectedSeats],
     passengers: getSeatLimit(),
     paymentMethod,
