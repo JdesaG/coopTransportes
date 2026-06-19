@@ -168,11 +168,11 @@ async function sendParcelCallback(parcel) {
   const executionId = getExecutionId();
 
   if (!executionId) {
-    parcelCallbackStatus.textContent = "Demo local: encomienda generada. En Jelou se enviara el callback y se abrira WhatsApp.";
+    parcelCallbackStatus.textContent = parcel.chatbotMessage;
     return;
   }
 
-  parcelCallbackStatus.textContent = "Confirmando con Jelou...";
+  parcelCallbackStatus.textContent = "Procesando tu solicitud...";
 
   await sendCallback({
     executionId,
@@ -197,7 +197,7 @@ async function sendParcelCallback(parcel) {
     }
   });
 
-  parcelCallbackStatus.textContent = "Confirmado con Jelou. Volviendo a WhatsApp...";
+  parcelCallbackStatus.textContent = parcel.chatbotMessage;
   scheduleWhatsAppRedirect();
 }
 
@@ -217,14 +217,14 @@ async function finishParcel(paymentCard = null) {
     `Total: ${parcel.total}`
   ].filter(Boolean).join("\n");
   parcelCode.textContent = parcel.id;
-  parcelCallbackStatus.textContent = "Confirmando con Jelou...";
+  parcelCallbackStatus.textContent = "Procesando tu solicitud...";
   closeModal(parcelCardDialog);
   openDialog(parcelDialog);
 
   try {
     await sendParcelCallback(parcel);
   } catch (error) {
-    parcelCallbackStatus.textContent = "No se pudo confirmar con Jelou. Revisa el WebView o intenta nuevamente.";
+    parcelCallbackStatus.textContent = "No se pudo procesar la solicitud. Intenta nuevamente.";
     console.error(error);
   }
 }

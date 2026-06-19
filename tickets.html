@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Coop Transportes | Tickets</title>
-    <link rel="stylesheet" href="./styles.css?v=20260619-jelou-callback" />
+    <link rel="stylesheet" href="./styles.css?v=20260619-clean-status" />
   </head>
   <body class="mobile-webview">
     <main class="app-shell">
@@ -129,10 +129,10 @@
           <p class="eyebrow">Reserva lista</p>
           <h2>Tu ticket fue generado</h2>
           <p id="ticket-copy"></p>
-          <p id="ticket-callback-status" class="callback-status">Confirmando con Jelou...</p>
+          <p id="ticket-callback-status" class="callback-status">Procesando tu solicitud...</p>
           <canvas id="ticket-qr" width="180" height="180" aria-label="Codigo QR del ticket"></canvas>
           <strong id="ticket-code" class="ticket-code"></strong>
-          <button id="close-dialog" class="primary" type="button">Volver a WhatsApp</button>
+          <button id="close-dialog" class="primary" type="button">Pagar</button>
         </div>
       </dialog>
 
@@ -172,6 +172,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="./script.js?v=20260619-jelou-callback"></script>
+    <script src="./script.js?v=20260619-clean-status"></script>
   </body>
 </html>

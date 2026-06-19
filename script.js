@@ -322,11 +322,11 @@ async function sendTicketCallback(ticket) {
   const executionId = getExecutionId();
 
   if (!executionId) {
-    ticketCallbackStatus.textContent = "Demo local: ticket generado. En Jelou se enviara el callback y se abrira WhatsApp.";
+    ticketCallbackStatus.textContent = ticket.chatbotMessage;
     return;
   }
 
-  ticketCallbackStatus.textContent = "Confirmando con Jelou...";
+  ticketCallbackStatus.textContent = "Procesando tu solicitud...";
 
   await sendCallback({
     executionId,
@@ -350,7 +350,7 @@ async function sendTicketCallback(ticket) {
     }
   });
 
-  ticketCallbackStatus.textContent = "Confirmado con Jelou. Volviendo a WhatsApp...";
+  ticketCallbackStatus.textContent = ticket.chatbotMessage;
   scheduleWhatsAppRedirect();
 }
 
@@ -369,7 +369,7 @@ async function buyTickets(paymentMethod, paymentCard = null) {
 
   saveTicket(ticket);
   ticketCopy.textContent = copy;
-  ticketCallbackStatus.textContent = "Confirmando con Jelou...";
+  ticketCallbackStatus.textContent = "Procesando tu solicitud...";
   renderQr(ticket);
   closeModal(paymentDialog);
   closeModal(cardDialog);
@@ -378,7 +378,7 @@ async function buyTickets(paymentMethod, paymentCard = null) {
   try {
     await sendTicketCallback(ticket);
   } catch (error) {
-    ticketCallbackStatus.textContent = "No se pudo confirmar con Jelou. Revisa el WebView o intenta nuevamente.";
+    ticketCallbackStatus.textContent = "No se pudo procesar la solicitud. Intenta nuevamente.";
     console.error(error);
   }
 }
