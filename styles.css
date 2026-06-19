@@ -425,6 +425,55 @@ dialog::backdrop {
   font-weight: 950;
 }
 
+.payment-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.payment-card {
+  min-height: 116px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.payment-card:hover,
+.payment-card:focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(8, 103, 178, 0.1);
+  outline: none;
+}
+
+.payment-card strong {
+  font-size: 16px;
+}
+
+.payment-card small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.payment-icon {
+  width: 42px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: #eff8ff;
+  color: var(--primary);
+  font-size: 17px;
+  font-weight: 950;
+}
+
 @media (min-width: 760px) {
   body {
     display: grid;

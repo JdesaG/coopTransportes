@@ -104,6 +104,26 @@
           <button id="close-dialog" class="primary" type="button">Cerrar</button>
         </div>
       </dialog>
+
+      <dialog id="payment-dialog">
+        <div class="dialog-card">
+          <p class="eyebrow">Metodo de pago</p>
+          <h2>Como quieres pagar?</h2>
+          <div class="payment-options">
+            <button class="payment-card" type="button" data-payment="Tarjeta">
+              <span class="payment-icon">••••</span>
+              <strong>Tarjeta</strong>
+              <small>Debito o credito</small>
+            </button>
+            <button class="payment-card" type="button" data-payment="Efectivo">
+              <span class="payment-icon">$</span>
+              <strong>Efectivo</strong>
+              <small>Paga en terminal</small>
+            </button>
+          </div>
+          <button id="cancel-payment" class="secondary" type="button">Volver</button>
+        </div>
+      </dialog>
     </main>
 
     <script src="./script.js"></script>

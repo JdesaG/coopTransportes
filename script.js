@@ -23,6 +23,8 @@ const totalPriceLabel = document.querySelector("#total-price");
 const buyButton = document.querySelector("#buy-button");
 const clearButton = document.querySelector("#clear-button");
 const dialog = document.querySelector("#ticket-dialog");
+const paymentDialog = document.querySelector("#payment-dialog");
+const cancelPayment = document.querySelector("#cancel-payment");
 const closeDialog = document.querySelector("#close-dialog");
 const ticketCopy = document.querySelector("#ticket-copy");
 
@@ -115,15 +117,21 @@ function syncPassengerLimit() {
   updateSeatState();
 }
 
-function buyTickets() {
+function openPaymentMethods() {
+  paymentDialog.showModal();
+}
+
+function buyTickets(paymentMethod) {
   const copy = [
     `${originInput.value} a ${destinationInput.value}`,
     `Fecha: ${dateInput.value}`,
     `Asientos: ${selectedSeats.join(", ")}`,
+    `Pago: ${paymentMethod}`,
     `Total: ${formatPrice(selectedSeats.length * getTicketPrice())}`
   ].join("\n");
 
   ticketCopy.textContent = copy;
+  paymentDialog.close();
   dialog.showModal();
 }
 
@@ -140,5 +148,9 @@ originInput.addEventListener("change", updateSeatState);
 destinationInput.addEventListener("change", updateSeatState);
 passengersInput.addEventListener("change", syncPassengerLimit);
 clearButton.addEventListener("click", clearSelection);
-buyButton.addEventListener("click", buyTickets);
+buyButton.addEventListener("click", openPaymentMethods);
+document.querySelectorAll("[data-payment]").forEach((button) => {
+  button.addEventListener("click", () => buyTickets(button.dataset.payment));
+});
+cancelPayment.addEventListener("click", () => paymentDialog.close());
 closeDialog.addEventListener("click", () => dialog.close());
